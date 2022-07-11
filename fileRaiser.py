@@ -5,6 +5,9 @@ import ntpath
 from shutil import copyfile
 import pyperclip
 
+# TODO Remove pyperclip stuff
+# TODO ask user for how deep they want to raise files
+
 
 #Returns list of file paths in the input directory
 def directoryWalk(directory):
