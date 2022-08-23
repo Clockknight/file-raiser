@@ -3,10 +3,7 @@ import sys
 import shutil
 import ntpath
 from shutil import copyfile
-import pyperclip
 
-
-# TODO Remove pyperclip stuff
 # TODO ask user for how deep they want to raise files
 # TODO add option to use the script from context menu
 # Guide: https://www.youtube.com/watch?v=jS2LuG1p8Vw
@@ -66,14 +63,8 @@ def main():
     # Take input from user, to an exiting directory
     while dirNoExist:
         directory = input(
-            '\nPlease input a directory to scan for files to raise.\nOr, type \"PASTE\" to grab the directory from your clipboard.\n')
+            '\nPlease input a directory to scan for files to raise.')
         print('\n')
-
-        # If the user inputs paste:
-        if directory.casefold() == 'PASTE'.casefold():
-            # The program checks the immediate clipboard for a directory
-            directory = pyperclip.paste()
-            print('New paste found. Text is: ' + directory)
 
         # Any other input will skip straight to this check.
         directoryList = directoryWalk(directory)
