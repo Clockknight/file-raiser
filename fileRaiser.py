@@ -2,16 +2,36 @@ import os
 import sys
 import shutil
 import ntpath
-from shutil import copyfile
+
 
 # TODO ask user for how deep they want to raise files
 # TODO add option to use the script from context menu
 # Guide: https://www.youtube.com/watch?v=jS2LuG1p8Vw
 
 # Returns list of file paths in the input directory
-def directoryWalk(directory):
-    pathList = []
+def directoryWalk(directorylist, n):
+    """
+    Given a list of root directories to walk through, and target depth of n >= 0:
 
+    Does: Return list of file paths in the input directory
+
+    Should: return dict of n-deep root keys, with array of >n deep file arrays
+    """
+    result = {}
+    for directory in directorylist:
+        # if this directory doesnt exist, return None
+        if not os.path.exists(directory):
+            return None
+
+        # if its not empty and...
+        # if n > 0
+        # update result with recursive of (subdirectories in directory, n-1)
+        # if n =0
+        # return dict version of below
+
+    # after looping through, return result
+
+    '''
     # If the path exists, leave the loop and continue with the rest of the program.
     if os.path.exists(directory):
         print('Path found. Processing for any subfiles in subdirectories.')
@@ -19,13 +39,13 @@ def directoryWalk(directory):
         # Use os.walk to find every file in every folder/subfolder
         for root, dirs, file in os.walk(directory, topdown=False):
 
-            if root != directory:  # Check if the root of a file is different than the inputted directory
+            if root != directory:  # Check if the root of a file is different from the inputted directory
                 for name in file:  # If so...
                     scanFile = os.path.join(root, name)  # Identify it by its full path
                     pathList.append(scanFile)  # Make a list with all of those files
 
     return pathList
-
+    '''
 
 # Return list of bool values that indicate settings
 def startupConfig():
@@ -42,9 +62,9 @@ def startupConfig():
         settingsFile.close()
 
         # Check argv for any modes passed through
-        if deleteMode == True:
+        if deleteMode:
             print('\nDelete Mode activated! The program will now delete files\' folders instead of just moving them.')
-        if unsafeMode == False:
+        if unsafeMode:
             print('\nUnsafe Mode activated! The program will no longer prompt to okay moving or copying files.')
 
 
@@ -67,7 +87,7 @@ def main():
         print('\n')
 
         # Any other input will skip straight to this check.
-        directoryList = directoryWalk(directory)
+        directoryList = directoryWalk([directory], 0)
 
         # If the function fails, it prints this error message for the user
         # This way, code checks for if the directory works regardless of which method is used
@@ -79,12 +99,13 @@ def main():
             raiseCount = len(directoryList)
             dirNoExist = False
 
-    # Display the amount of files that would be raised by the program.
-    # By this point in the code, the only relevant variables called should be a list of directories, raiseCount, and the directory string
+    # Display the amount of files that would be raised by the program. By this point in the code, the only relevant
+    # variables called should be a list of directories, raiseCount, and the directory string
     while not unsafeMode:
-        # Check with user that the directory and all details of the the directory are correct.
+        # Check with user that the directory and all details of the directory are correct.
         print('\n', raiseCount,
-              'files in sub-folders were found. Please type\n\tRAISE\tor\tQUIT\nto raise the highlighted files or stop the program now, respectively.')
+              'files in sub-folders were found. Please type\n\tRAISE\tor\tQUIT\nto raise the highlighted files or '
+              'stop the program now, respectively.')
         confirmation = input()
 
         if confirmation.casefold() == 'RAISE'.casefold():
@@ -115,7 +136,6 @@ def main():
                 emptyDir = directoryList[i]
                 shutil.rmtree(emptyDir)
                 directoryList.remove(emptyDir)
-
 
             # Otherwise, just copy the file
             else:
