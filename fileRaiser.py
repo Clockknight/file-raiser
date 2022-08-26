@@ -16,40 +16,43 @@ def directoryWalk(directorylist, n):
     Return: dict of n-deep root keys, with array of >n deep file arrays
     """
     result = {}
+    count = 0
     for directory in directorylist:
         # if this directory doesn't exist, return None
-        print(os.path.exists(directory))
-        print(directory)
         if not os.path.exists(directory):
             continue
         filelist = []
-        for root, dirs, file in os.walk(directory):
-            # case: directory exists and n > 0
-            # update result with recursive of (subdirectories in directory, n-1)
-            if n > 0:
-                dirs = [os.path.join(root, directory) for directory in dirs]
-                result.update(directoryWalk(dirs, n-1))
-            # case: directory exists and n = 0
-            # return dict version of old dirWalk()
-            else:
-                for r, d, f in os.walk(directory, topdown=False):
-                    for name in f:
-                        scanFile = os.path.join(root, name)  # Identify it by its full path
-                        filelist.append(scanFile)  # Make a list with all of those files
-                # Check if there are any files in filelist
-                if filelist:
-                    result.update({directory: filelist})
+        # TODO refactor this for loop to only give immediate subdirectories
+        # case: directory exists and n > 0
+        # update result with recursive of (subdirectories in directory, n-1)
+        if n > 0:
+            for subdirs in next(os.walk(directory))[1]:
+                dirs = [os.path.join(directory, subdir) for subdir in subdirs]
+                res = directoryWalk(dirs, n - 1)
+                result.update(res[0])
+                count += res[1]
+        # case: directory exists and n = 0
+        # return dict version of old dirWalk()
+        else:
+            for r, d, f in os.walk(directory, topdown=False):
+                for name in f:
+                    # Identify it by its full path
+                    curfile = os.path.join(r, name)
+                    if curfile not in filelist and r != directory:
+                        filelist.append(curfile)  # Make a list with all of those files
+            # Check if there are any files in filelist
+            if filelist:
+                result.update({directory: filelist})
+                count = len(filelist)
 
     # after looping through, return result
-    return result
-
+    return result, count
 
 
 # Return list of bool values that indicate settings
 def startupConfig():
     deleteMode = False
     unsafeMode = False
-    dirNoExist = True
 
     filePath = './settings.txt'
 
@@ -78,9 +81,10 @@ def main():
     count = 0
     i = 0
 
-    # Take input from user, to an exiting directory
-    while dirNoExist:
-        #directory = input(
+    # CODEBLOCK
+    # Infinite loop to get valid input from user
+    while True:
+        # directory = input(
         #   '\nPlease input a directory to scan for files to raise.')
         directory = 'C:\\Users\\Tyler\\Documents\\GitHub\\file-raiser\\a'
         print('\n')
@@ -92,14 +96,14 @@ def main():
         # If the function fails, it prints this error message for the user
         # This way, code checks for if the directory works regardless of which method is used
         if not directorydict:
-            print('The directory doesn\'t work. Please try another directory.')
-
+            print('The directory is empty. Please double check you\'ve input a valid directory, and try again.')
         else:
-            count = len(directorydict)
-            dirNoExist = False
+            break
 
+    # TODO Double check this to make sure it's not messed up
+    # CODEBLOCK
+    # Block to let user validate results
     # Display the amount of files that would be raised by the program. By this point in the code, the only relevant
-    # variables called should be a list of directories, count, and the directory string
     while not unsafeMode:
         # Check with user that the directory and all details of the directory are correct.
         print('\n', count,
@@ -114,47 +118,20 @@ def main():
         else:
             print('\nNo valid input was found. Try again.')
 
-    # Now, with the list of directories
-    for itemPath in directorydict:
-        # The code will create a list with where all the files WILL go
-        fileDestinationList.append(os.path.join(directory, ntpath.basename(itemPath)))
+    # CODEBLOCK
+    # Actual processing of files gotten from directoryWalk()
+    for key in directorydict:
+        for originalpath in directorydict[key]:
+            destinationpath = os.path.join(key, os.path.basename(originalpath))
+            shutil.move(originalpath, destinationpath)
 
-    # For each file, take it and move it to original directory
-    while i < count:
-        # TODO redo this so it actually makes sense to do with a dict object
-
-        print('\nMoving file', directorydict[i])
-
-        # Try to raise the files
-        try:
-            # If deleteMode is on use the move function instead of copyfile
-            if deleteMode:
-                shutil.move(directorydict[i], fileDestinationList[i])
-                print(directorydict[i], 'moved to\n', fileDestinationList[i])
-
-                emptyDir = directorydict[i]
-                shutil.rmtree(emptyDir)
-                directorydict.remove(emptyDir)
-
-            # Otherwise, just copy the file
-            else:
-                shutil.move(directorydict[i], fileDestinationList[i])
-                print(directorydict[i], 'moved to\n', fileDestinationList[i])
-
-        except:
-            errorIndexes.append(i)  # Keep track of failed raises' indexes
-            errorList.append(sys.exc_info()[0])  # Keep track of the errors of the raise errors
-            print('Error. Moving to next file.')
-
-        i += 1
-
-    for dirs in os.walk(directory, topdown=False):
-        print(dirs)
-
+    # TODO Figure out how to deal with duplicate files (what if multiple files are called d.txt?)
+    ''''
     if len(errorList) > 0:
         for error in errorList:
             print('Could not raise the following files:')
             print(error)
+    '''
 
 
 main()
